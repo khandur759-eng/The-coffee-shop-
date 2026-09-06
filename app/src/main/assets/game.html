@@ -1,0 +1,2056 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>The Last Coffee Shop</title>
+<style>
+:root {
+  --ink: #211916;
+  --cream: #fff6e5;
+  --latte: #e6b679;
+  --rust: #a94f37;
+  --sage: #6f947c;
+  --gold: #f1c76a;
+  --panel: #2b1f1ee8;
+  --line: #efbd79;
+}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #140e10;
+  color: var(--cream);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #140e10;
+}
+#scene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+  background: linear-gradient(180deg, rgba(28, 18, 20, 0.95), rgba(28, 18, 20, 0.8) 70%, transparent);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+}
+.brand-title {
+  font-family: Georgia, serif;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  color: #fff0d4;
+  line-height: 1.1;
+}
+.brand-sub {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #e8b77b;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pill {
+  background: rgba(255, 241, 210, 0.12);
+  border: 1px solid rgba(246, 202, 136, 0.28);
+  border-radius: 12px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pill b {
+  color: #ffe09d;
+}
+.clock {
+  min-width: 60px;
+  justify-content: center;
+}
+.patience {
+  width: 55px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-block;
+}
+.patience i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--gold);
+  transition: width 0.2s, background-color 0.3s;
+}
+
+/* Tray & Tickets area */
+.side-hud {
+  position: absolute;
+  top: 68px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  z-index: 5;
+  max-width: 220px;
+}
+.tray-bar {
+  background: rgba(43, 31, 30, 0.88);
+  border: 1px solid rgba(225, 172, 108, 0.4);
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tray-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #eac184;
+  letter-spacing: 1px;
+}
+.tray-slots {
+  display: flex;
+  gap: 4px;
+}
+.tray-slot {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px dashed rgba(234, 193, 132, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+.tray-slot.filled {
+  background: #7a4635;
+  border: 1px solid #e1ac6c;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.ticket {
+  width: 210px;
+  max-height: 38vh;
+  overflow-y: auto;
+  background: rgba(43, 31, 30, 0.88);
+  border: 1px solid rgba(225, 172, 108, 0.45);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+}
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.ticket h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #eac184;
+}
+.ticketEmpty {
+  font-size: 11px;
+  color: rgba(234, 214, 188, 0.7);
+  line-height: 1.4;
+  padding: 4px 0;
+}
+.ticketRow {
+  border-top: 1px solid rgba(255, 242, 208, 0.12);
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.ticketRow:hover, .ticketRow.selected {
+  background: rgba(255, 255, 255, 0.1);
+}
+.ticketName {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 11.5px;
+}
+.ticketStatus {
+  font-size: 9.5px;
+  color: #ffe09d;
+}
+.ticketSub {
+  font-size: 10px;
+  color: rgba(255, 226, 178, 0.8);
+  margin-top: 2px;
+  line-height: 1.25;
+}
+.miniBar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.miniBar i {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.2s;
+}
+
+/* Toast Message */
+.bubble {
+  position: absolute;
+  left: 50%;
+  top: 72px;
+  transform: translateX(-50%);
+  background: rgba(57, 38, 38, 0.92);
+  border: 1px solid #edbc78;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  max-width: 86%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.bubble.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(4px);
+}
+
+/* Bottom Controls */
+.bottom {
+  padding: 8px 12px max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  background: linear-gradient(0deg, rgba(28, 18, 20, 0.96), rgba(28, 18, 20, 0.85) 60%, transparent);
+  pointer-events: none;
+  position: relative;
+}
+
+/* Virtual Joystick */
+.joystick-zone {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  pointer-events: auto;
+  margin-bottom: 4px;
+}
+.joystick-base {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 241, 210, 0.15), rgba(45, 30, 28, 0.6));
+  border: 2px solid rgba(234, 193, 132, 0.35);
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  touch-action: none;
+}
+.joystick-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e6b679, #8d4f3b);
+  border: 2px solid #fff2d0;
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transition: transform 0.05s ease-out;
+}
+
+/* Action Center */
+.center-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 180px;
+  text-align: center;
+  margin-bottom: 12px;
+  pointer-events: auto;
+}
+.hint-text {
+  color: #f8d9a6;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  background: rgba(35, 23, 24, 0.7);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(234, 193, 132, 0.2);
+}
+
+/* Right Action Buttons */
+.action-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: auto;
+  margin-bottom: 4px;
+}
+.action-row {
+  display: flex;
+  gap: 6px;
+}
+.btn {
+  border: 1px solid #d99b5e;
+  background: #754534;
+  color: #fff7e8;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #321f1a;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: filter 0.15s, transform 0.1s;
+  min-height: 38px;
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #321f1a;
+}
+.btn.primary {
+  background: linear-gradient(135deg, #ab5d3d, #833e2a);
+  border-color: #f0bd76;
+}
+.btn.interact-btn {
+  font-size: 14px;
+  padding: 12px 20px;
+  min-width: 140px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #c76f44, #94452e);
+  border: 2px solid #ffcd85;
+  box-shadow: 0 4px 12px rgba(186, 94, 61, 0.4), 0 3px 0 #321f1a;
+}
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  font-size: 10.5px;
+  padding: 6px 9px;
+  min-height: 32px;
+}
+
+/* Modals */
+.modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(14, 10, 10, 0.85);
+  z-index: 20;
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+}
+.modal.hidden {
+  display: none;
+}
+.panel {
+  width: min(540px, 94%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: linear-gradient(145deg, #fff2db, #f7d6a7);
+  color: var(--ink);
+  border: 2px solid #b96d4a;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.7);
+}
+.panel h1, .panel h2 {
+  font-family: Georgia, serif;
+  color: #73382e;
+  margin: 4px 0 8px;
+}
+.panel h1 { font-size: 28px; }
+.panel h2 { font-size: 22px; }
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #a76041;
+}
+.panel p {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #3b2a24;
+  margin: 6px 0 12px;
+}
+.introGrid, .recipeGrid, .upgradeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.card, .recipe {
+  background: #ffe4b9;
+  border: 1px solid #d59c69;
+  border-radius: 10px;
+  padding: 9px;
+}
+.card b, .recipe b {
+  display: block;
+  font-size: 12px;
+  color: #4a241c;
+}
+.card span, .recipe small {
+  display: block;
+  color: #6c5044;
+  font-size: 10.5px;
+  line-height: 1.35;
+  margin-top: 3px;
+}
+.recipe {
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.1s, background 0.1s;
+}
+.recipe:hover, .recipe.selected {
+  background: #f0bc7e;
+  border-color: #a94f37;
+  transform: translateY(-1px);
+}
+.recipe.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.recipe em {
+  font-size: 9.5px;
+  color: #8b5140;
+  font-style: normal;
+  display: block;
+  margin-top: 3px;
+}
+.shoprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #d2a070;
+}
+.shoprow b {
+  font-size: 13px;
+  color: #4a241c;
+}
+.shoprow small {
+  display: block;
+  color: #745548;
+  margin-top: 2px;
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+.summary {
+  background: #ffe3b8;
+  border-radius: 12px;
+  padding: 12px;
+  line-height: 1.5;
+  font-size: 13px;
+  color: #422920;
+  margin-bottom: 12px;
+}
+.modalActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.tiny {
+  font-size: 10.5px;
+  color: #775448;
+  margin-top: 8px;
+}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="scene" aria-label="3D café simulator"></canvas>
+
+  <div class="hud">
+    <!-- Top HUD Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-title">THE LAST COFFEE SHOP</span>
+        <span class="brand-sub">Cozy 3D Café Simulator</span>
+      </div>
+      <div class="stats">
+        <span class="pill">☕ <b id="money">$55</b></span>
+        <span class="pill">DAY <b id="day">1</b></span>
+        <span class="pill clock">⏱ <b id="clock">2:00</b></span>
+        <span class="pill">♥ <span class="patience"><i id="patience"></i></span></span>
+      </div>
+    </header>
+
+    <!-- Side Tickets & Tray Area -->
+    <div class="side-hud">
+      <div class="tray-bar">
+        <span class="tray-title">Tray</span>
+        <div class="tray-slots">
+          <div class="tray-slot" id="slot0">·</div>
+          <div class="tray-slot" id="slot1">·</div>
+          <div class="tray-slot" id="slot2">·</div>
+        </div>
+      </div>
+      <aside class="ticket">
+        <div class="ticket-header">
+          <h3>Orders</h3>
+          <span id="ticketCount" style="font-size:9px;color:#e8b77b;font-weight:700">0 open</span>
+        </div>
+        <div id="tickets" class="ticketEmpty">The morning is quiet. Guests and their drink orders will appear here.</div>
+      </aside>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="bubble" class="bubble"></div>
+
+    <!-- Bottom Controls Area -->
+    <footer class="bottom">
+      <!-- On-screen Virtual Joystick -->
+      <div class="joystick-zone" id="joystickZone">
+        <div class="joystick-base" id="joystickBase">
+          <div class="joystick-thumb" id="joystickThumb"></div>
+        </div>
+      </div>
+
+      <!-- Center Dynamic Guide -->
+      <div class="center-hint">
+        <div id="hint" class="hint-text">Use joystick or tap floor to walk</div>
+      </div>
+
+      <!-- Right Action Cluster -->
+      <div class="action-cluster">
+        <div class="action-row">
+          <button id="drinkBtn" class="btn">☕ RECIPES</button>
+          <button id="pauseBtn" class="btn ghost">Ⅱ PAUSE</button>
+          <button id="audioBtn" class="btn ghost">♪ SOUND</button>
+          <button id="helpBtn" class="btn ghost">?</button>
+        </div>
+        <button id="interactBtn" class="btn primary interact-btn">☕ INTERACT</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Start Welcome Modal -->
+  <div id="start" class="modal">
+    <section class="panel">
+      <div class="eyebrow">A warm 3D café in a cold city</div>
+      <h1>The Last Coffee Shop</h1>
+      <p>Outside, snow falls in the icy city. But inside your warm shop, the aroma of roasted beans fills the room. Walk the floor, welcome guests, brew authentic recipes, and keep every table turning before the 120-second day closes.</p>
+      <div class="introGrid">
+        <div class="card">
+          <b>1 · Welcome</b>
+          <span>Approach guests and tap Interact to take their order. Floating tickets track their preferences and patience.</span>
+        </div>
+        <div class="card">
+          <b>2 · Brew</b>
+          <span>Select a recipe, step up to the espresso machine, and tap Brew. Carry up to three cups on your tray.</span>
+        </div>
+        <div class="card">
+          <b>3 · Serve & Clean</b>
+          <span>Deliver the matching drinks. After guests finish, collect payment and wipe the dirty table for new guests.</span>
+        </div>
+      </div>
+      <p><b>Opening Day:</b> Start with $55, Espresso and Calm Tea. Upgrade the espresso machine to unlock Velvet Latte and Midnight Mocha, buy extra tables, decorate with plants, hire automated staff, and expand into the back room!</p>
+      <button id="startBtn" class="btn primary" style="width:100%;font-size:15px;margin-top:8px">OPEN CAFÉ DOORS →</button>
+    </section>
+  </div>
+
+  <!-- Pause Modal -->
+  <div id="pause" class="modal hidden">
+    <section class="panel">
+      <div class="eyebrow">The kettle waits</div>
+      <h2>Café Paused</h2>
+      <p>The day clock and every guest are frozen. Take a breath, then return to the floor whenever you are ready.</p>
+      <div class="modalActions">
+        <button id="resumeBtn" class="btn primary">RESUME DAY</button>
+        <button id="pauseHelpBtn" class="btn">VIEW MANUAL</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="help" class="modal hidden">
+    <section class="panel">
+      <div class="eyebrow">Barista Guidebook</div>
+      <h2>How to Run the Room</h2>
+      <div class="introGrid">
+        <div class="card">
+          <b>Move & Walk</b>
+          <span>Use the on-screen joystick or tap anywhere on the café floor to walk. You and guests seamlessly navigate around furniture.</span>
+        </div>
+        <div class="card">
+          <b>Context Interact</b>
+          <span>The large Interact button dynamically adapts: Brew at the machine, Take Order from guests, Serve matching cups, Collect payment, and Wash tables!</span>
+        </div>
+        <div class="card">
+          <b>Tickets & Tray</b>
+          <span>Guests may order 1 or 2 drinks. Tap a ticket in the sidebar to auto-walk to that guest. Your tray carries up to 3 cups at a time.</span>
+        </div>
+        <div class="card">
+          <b>Automation</b>
+          <span>Hire staff in the shop! A Barista automatically prepares orders every 8s, and a Waiter serves and wipes tables every 10s.</span>
+        </div>
+      </div>
+      <button id="closeHelp" class="btn primary" style="width:100%">BACK TO FLOOR</button>
+    </section>
+  </div>
+
+  <!-- Recipe Selection Pad -->
+  <div id="recipes" class="modal hidden">
+    <section class="panel">
+      <div class="eyebrow">Drink Pad</div>
+      <h2>Select Next Brew</h2>
+      <p class="tiny">Choose which drink to brew at the espresso machine. Tray status: <b id="trayCount">0/3</b> cups.</p>
+      <div id="recipeList" class="recipeGrid"></div>
+      <button id="closeRecipes" class="btn primary" style="width:100%">CLOSE PAD</button>
+    </section>
+  </div>
+
+  <!-- End of Day Shop / Summary Modal -->
+  <div id="shop" class="modal hidden">
+    <section class="panel">
+      <div class="eyebrow">After the rush · Day <span id="summaryDay">1</span></div>
+      <h2>Lights Still Warm</h2>
+      <div id="summary" class="summary"></div>
+      <p class="tiny">Reinvest your earnings into café upgrades. Every physical upgrade dynamically enriches your 3D room!</p>
+      <div id="shopRows"></div>
+      <div class="modalActions">
+        <button id="nextBtn" class="btn primary" style="flex:1">START NEXT DAY →</button>
+        <button id="resetBtn" class="btn ghost">NEW GAME</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Local bundled Three.js library -->
+<script src="three.min.js"></script>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const canvas = $('scene');
+
+  if (!window.THREE) {
+    alert('3D engine failed to initialize.');
+    return;
+  }
+
+  const THREE = window.THREE;
+  const TAU = Math.PI * 2;
+  const DAY_LENGTH = 120;
+  const GRACE = 25;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  // Drink recipes
+  const recipes = [
+    { id: 'espresso', name: 'Espresso', price: 7, time: 3.0, need: 0, icon: '☕', colour: 0x4a2924, desc: 'Rich, dark and brisk.' },
+    { id: 'tea', name: 'Calm Herbal Tea', price: 8, time: 2.5, need: 0, icon: '🍵', colour: 0x6e884e, desc: 'Warm calming botanical brew.' },
+    { id: 'latte', name: 'Velvet Latte', price: 10, time: 4.0, need: 1, icon: '🥛', colour: 0xd79b70, desc: 'Silky microfoam over espresso.' },
+    { id: 'mocha', name: 'Midnight Mocha', price: 13, time: 5.0, need: 2, icon: '🍫', colour: 0x361f1b, desc: 'Rich chocolate and dark roast.' }
+  ];
+
+  // Save state
+  const defaultSave = () => ({
+    day: 1,
+    money: 55,
+    total: 0,
+    reputation: 75,
+    up: { machine: 0, tables: 0, decor: 0, expansion: 0, staff: 0, branch: 0 },
+    audio: true
+  });
+
+  let save = defaultSave();
+
+  function loadSave() {
+    try {
+      let raw = null;
+      if (window.AndroidBridge && window.AndroidBridge.loadSaveData) {
+        raw = window.AndroidBridge.loadSaveData();
+      }
+      if (!raw) {
+        raw = localStorage.getItem('lastCoffee3D_v2');
+      }
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          save.day = clamp(Math.floor(Number(parsed.day) || 1), 1, 999);
+          save.money = clamp(Math.floor(Number(parsed.money) || 0), 0, 999999);
+          save.total = clamp(Math.floor(Number(parsed.total) || 0), 0, 9999999);
+          save.reputation = clamp(Math.floor(Number(parsed.reputation) || 75), 10, 100);
+          save.audio = parsed.audio !== false;
+          if (parsed.up) {
+            for (const k of Object.keys(save.up)) {
+              save.up[k] = clamp(Math.floor(Number(parsed.up[k]) || 0), 0, k === 'expansion' ? 1 : 3);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Save load fallback', e);
+    }
+  }
+
+  function persist() {
+    try {
+      const str = JSON.stringify(save);
+      localStorage.setItem('lastCoffee3D_v2', str);
+      if (window.AndroidBridge && window.AndroidBridge.saveGameData) {
+        window.AndroidBridge.saveGameData(str);
+      }
+    } catch (e) {}
+  }
+
+  loadSave();
+
+  // Haptic feedback helper
+  function triggerHaptic(type = 'light') {
+    if (window.AndroidBridge && window.AndroidBridge.triggerHaptic) {
+      window.AndroidBridge.triggerHaptic(type);
+    } else if (navigator.vibrate) {
+      navigator.vibrate(type === 'heavy' ? 40 : 20);
+    }
+  }
+
+  // Audio Context synthesis
+  let audioCtx = null;
+  function soundPing(freq = 520, duration = 0.08, type = 'sine') {
+    if (!save.audio) return;
+    try {
+      const AudioClass = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx && AudioClass) audioCtx = new AudioClass();
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  // World & 3D state
+  let renderer, scene, camera, raycaster, mouse;
+  let player, playerTarget;
+  let selectedRecipe = 'espresso';
+  let held = []; // Tray items (up to 3)
+  let brew = null; // Current brewing progress
+  let customers = [];
+  let tables = [];
+  let obstacles = [];
+  let steamParticles = [];
+  let snowParticles = null;
+  let mode = 'start'; // 'start', 'play', 'pause', 'shop'
+  let paused = false;
+  let elapsed = 0;
+  let spawnIn = 2.0;
+  let customerId = 0;
+  let served = 0;
+  let missed = 0;
+  let dayEarn = 0;
+  let dayTips = 0;
+  let dirtyCleaned = 0;
+  let toastTimer = 0;
+  let lastTime = 0;
+  let staffBaristaTimer = 8;
+  let staffWaiterTimer = 10;
+  let focusTicket = null;
+
+  const ROOM = { w: 22, d: 15 };
+
+  // Materials
+  function mat(c, rough = 0.65, metal = 0.05) {
+    return new THREE.MeshStandardMaterial({ color: c, roughness: rough, metalness: metal });
+  }
+
+  const M = {
+    floor: mat(0x734a36, 0.7),
+    wood: mat(0x5c2e22, 0.6),
+    wood2: mat(0x9a583a, 0.6),
+    cream: mat(0xf7deb3, 0.5),
+    wall: mat(0x322226, 0.8),
+    wallTrim: mat(0x4a3237, 0.7),
+    gold: mat(0xe5ae57, 0.35, 0.3),
+    green: mat(0x466850, 0.6),
+    dark: mat(0x221719, 0.6),
+    skin: mat(0xf0ba86, 0.5),
+    windowGlass: new THREE.MeshStandardMaterial({ color: 0x1f2e3d, roughness: 0.2, metalness: 0.1 }),
+    steam: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 })
+  };
+
+  function box(name, x, y, z, w, h, d, material, cast = false) {
+    const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+    o.name = name;
+    o.position.set(x, y, z);
+    o.castShadow = cast;
+    o.receiveShadow = true;
+    scene.add(o);
+    return o;
+  }
+
+  function cyl(name, x, y, z, r, h, material, cast = false, segments = 16) {
+    const o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, segments), material);
+    o.name = name;
+    o.position.set(x, y, z);
+    o.castShadow = cast;
+    o.receiveShadow = true;
+    scene.add(o);
+    return o;
+  }
+
+  function addObstacle(x, z, w, d) {
+    obstacles.push({ x, z, w, d, solid: true });
+  }
+
+  function makeTable(x, z) {
+    const root = new THREE.Group();
+    root.position.set(x, 0, z);
+
+    // Tabletop
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.18, 24), M.wood2);
+    top.position.y = 1.35;
+    top.castShadow = true;
+    root.add(top);
+
+    // Center leg and pedestal
+    const leg = cyl('table-leg', 0, 0.68, 0, 0.12, 1.35, M.wood, true);
+    root.add(leg);
+    const base = cyl('table-base', 0, 0.06, 0, 0.65, 0.12, M.wood, true);
+    root.add(base);
+
+    // Table number plate
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.03, 16), M.gold);
+    plate.position.set(0, 1.45, 0);
+    root.add(plate);
+
+    // 4 Chairs around table
+    const chairOffsets = [[1.7, 0], [-1.7, 0], [0, 1.7], [0, -1.7]];
+    chairOffsets.forEach(p => {
+      const chairGroup = new THREE.Group();
+      chairGroup.position.set(p[0], 0, p[1]);
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.14, 0.72), M.wood);
+      seat.position.y = 0.72;
+      seat.castShadow = true;
+      chairGroup.add(seat);
+      const cleg = cyl('cleg', 0, 0.36, 0, 0.08, 0.72, M.dark, true);
+      chairGroup.add(cleg);
+      // Backrest
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.6, 0.1), M.wood);
+      back.position.set(0, 1.1, p[1] > 0 ? 0.32 : -0.32);
+      chairGroup.add(back);
+      chairGroup.rotation.y = Math.atan2(-p[0], -p[1]);
+      root.add(chairGroup);
+    });
+
+    // Dirty dish indicator mesh (cups left over)
+    const dirtyDishes = new THREE.Group();
+    dirtyDishes.name = 'dirtyDishes';
+    dirtyDishes.position.set(0, 1.45, 0);
+    const cup1 = cyl('dirtyCup1', 0.2, 0.15, 0.1, 0.14, 0.3, mat(0xcccccc), true);
+    const cup2 = cyl('dirtyCup2', -0.2, 0.15, -0.15, 0.14, 0.3, mat(0x999999), true);
+    dirtyDishes.add(cup1);
+    dirtyDishes.add(cup2);
+    dirtyDishes.visible = false;
+    root.add(dirtyDishes);
+
+    scene.add(root);
+    const t = { x, z, root, dirtyDishes, customer: null, dirty: false };
+    tables.push(t);
+    addObstacle(x, z, 1.6, 1.6);
+    return t;
+  }
+
+  function makePlant(x, z) {
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
+    const pot = cyl('pot', 0, 0.38, 0, 0.44, 0.76, M.wood2, true);
+    g.add(pot);
+    for (let i = 0; i < 7; i++) {
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), mat(0x466850));
+      leaf.scale.set(0.4, 1.1, 0.25);
+      leaf.position.set(Math.cos(i * 0.9) * 0.35, 1.0 + Math.sin(i * 0.8) * 0.35, Math.sin(i * 0.9) * 0.35);
+      leaf.rotation.z = (i - 3) * 0.3;
+      leaf.castShadow = true;
+      g.add(leaf);
+    }
+    scene.add(g);
+  }
+
+  function makeLamp(x, z) {
+    const pole = cyl('cord', x, 4.2, z, 0.03, 3.2, M.gold);
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.48, 0.36, 16, true), M.gold);
+    shade.position.set(x, 3.9, z);
+    scene.add(shade);
+    const bulb = new THREE.PointLight(0xffbe70, 1.8, 7.5, 2);
+    bulb.position.set(x, 3.8, z);
+    bulb.castShadow = true;
+    scene.add(bulb);
+  }
+
+  function makeCharacter(col, isPlayer = false) {
+    const g = new THREE.Group();
+
+    // Body
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 0.75, 5, 10), mat(col));
+    body.position.y = 1.05;
+    body.castShadow = true;
+    g.add(body);
+
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 8), M.skin);
+    head.position.y = 1.92;
+    head.castShadow = true;
+    g.add(head);
+
+    // Hair
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.34, 12, 6, 0, TAU, 0, Math.PI * 0.5), M.dark);
+    hair.position.y = 2.05;
+    hair.castShadow = true;
+    g.add(hair);
+
+    if (isPlayer) {
+      // Barista Apron
+      const apron = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.58, 0.05), M.cream);
+      apron.position.set(0, 1.14, 0.38);
+      g.add(apron);
+
+      // Carried Tray
+      const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.04, 16), M.gold);
+      tray.position.set(0, 1.0, 0.58);
+      g.add(tray);
+    } else {
+      // Scarf for cold weather
+      const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.1, 8, 16), mat(0xd47754));
+      scarf.rotation.x = Math.PI / 2;
+      scarf.position.y = 1.65;
+      g.add(scarf);
+    }
+
+    return g;
+  }
+
+  function buildSnowParticles() {
+    const count = 180;
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3 + 0] = rnd(-ROOM.w / 2 - 4, ROOM.w / 2 + 4);
+      positions[i * 3 + 1] = rnd(1, 9);
+      positions[i * 3 + 2] = rnd(-ROOM.d / 2 - 4, -ROOM.d / 2 - 0.5);
+    }
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const pmat = new THREE.PointsMaterial({ color: 0xe0eaff, size: 0.16, transparent: true, opacity: 0.75 });
+    snowParticles = new THREE.Points(geom, pmat);
+    scene.add(snowParticles);
+  }
+
+  function buildWorld() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x130d10);
+    scene.fog = new THREE.Fog(0x130d10, 22, 40);
+
+    camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 15, 16);
+
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
+
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: false,
+        powerPreference: 'default',
+        failIfMajorPerformanceCaveat: false,
+        precision: 'mediump'
+      });
+    } catch (err) {
+      console.warn('WebGL default renderer failed, trying basic context fallback:', err);
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.BasicShadowMap;
+
+    // Ambient and moonlight
+    const hemi = new THREE.HemisphereLight(0xffe0b5, 0x241a28, 1.8);
+    scene.add(hemi);
+
+    const moon = new THREE.DirectionalLight(0x8faaff, 0.6);
+    moon.position.set(-8, 14, -8);
+    moon.castShadow = true;
+    moon.shadow.mapSize.set(1024, 1024);
+    scene.add(moon);
+
+    // Warm indoor accent light
+    const warmKey = new THREE.DirectionalLight(0xffcaa0, 1.0);
+    warmKey.position.set(6, 12, 10);
+    scene.add(warmKey);
+
+    // Room Shell
+    box('floor', 0, -0.1, 0, ROOM.w, 0.2, ROOM.d, M.floor, false);
+    box('back wall', 0, 3.5, -ROOM.d / 2, ROOM.w, 7.2, 0.3, M.wall);
+    box('left wall', -ROOM.w / 2, 3.5, 0, 0.3, 7.2, ROOM.d, M.wall);
+    box('right wall', ROOM.w / 2, 3.5, 0, 0.3, 7.2, ROOM.d, M.wall);
+
+    addObstacle(0, -ROOM.d / 2, 0.3, ROOM.d);
+    addObstacle(-ROOM.w / 2, 0, 0.3, ROOM.d);
+    addObstacle(ROOM.w / 2, 0, 0.3, ROOM.d);
+
+    // Large glass windows facing the street with cold night city glow
+    for (let x = -8; x <= 8; x += 4) {
+      box('window', x, 3.7, -7.28, 2.7, 2.3, 0.12, M.windowGlass);
+      box('mullion-v', x, 3.7, -7.05, 0.08, 2.3, 0.08, M.gold);
+      box('mullion-h', x, 3.7, -7.05, 2.7, 0.08, 0.08, M.gold);
+    }
+
+    // Front counter bar
+    box('counter', 5.6, 1.0, -4.9, 7.2, 2.0, 1.3, M.wood, true);
+    box('counter top', 5.6, 2.08, -4.9, 7.45, 0.2, 1.5, M.cream, true);
+    addObstacle(5.6, -4.9, 7.4, 1.5);
+
+    // Espresso Machine Station
+    box('espresso base', 2.4, 2.55, -4.88, 1.8, 0.8, 0.8, M.dark, true);
+    box('espresso boiler', 2.4, 3.05, -5.0, 1.6, 0.5, 0.6, M.gold, true);
+    cyl('group head 1', 2.1, 2.8, -4.45, 0.12, 0.22, M.gold, true);
+    cyl('group head 2', 2.7, 2.8, -4.45, 0.12, 0.22, M.gold, true);
+
+    // Wash sink
+    box('sink', 7.4, 2.15, -4.88, 1.2, 0.35, 0.8, mat(0x8fa4a3, 0.3, 0.5), true);
+    cyl('faucet', 7.4, 2.55, -5.1, 0.04, 0.5, M.gold);
+
+    // Manager desk & ledger
+    box('desk', 9.2, 0.7, 4.4, 1.7, 1.4, 1.2, M.wood, true);
+    addObstacle(9.2, 4.4, 2.0, 1.5);
+
+    // Entrance door from the city
+    box('door frame', -9.8, 2.2, 0, 0.12, 4.4, 2.8, M.wood2);
+    box('door glass', -9.7, 2.35, 0, 0.1, 3.5, 2.1, M.windowGlass);
+
+    // Cozy Café Signboard
+    box('sign-frame', 0, 5.3, -7.08, 7.2, 0.9, 0.15, M.wood2);
+    box('sign-face', 0, 5.3, -6.97, 6.8, 0.65, 0.04, M.cream);
+
+    // Hanging lamps
+    makeLamp(-5, -1);
+    makeLamp(0, 2.2);
+    makeLamp(5, 3.8);
+
+    // Plants
+    makePlant(-9, 5.2);
+    makePlant(9, -6);
+
+    // Seating tables (base 3 + upgrade tables)
+    const tableSpots = [[-6, -1], [-6, 3], [-1, -1], [-1, 3], [3, 3], [7, 1]];
+    const totalTables = Math.min(6, 3 + save.up.tables);
+    for (let i = 0; i < totalTables; i++) {
+      makeTable(tableSpots[i][0], tableSpots[i][1]);
+    }
+
+    // Annex expansion
+    if (save.up.expansion > 0) {
+      box('annex floor', 0, -0.1, 7.5, ROOM.w, 0.15, 4.2, M.floor);
+      box('annex back', 0, 3.5, 9.55, ROOM.w, 7.2, 0.3, M.wall);
+      makePlant(-8, 8);
+      makeTable(5, 7.2);
+    }
+
+    // Player character
+    player = {
+      pos: new THREE.Vector3(0, 0, 3.8),
+      group: makeCharacter(0xb86445, true),
+      speed: 5.4,
+      isMoving: false,
+      stepCycle: 0
+    };
+    player.group.position.copy(player.pos);
+    scene.add(player.group);
+    playerTarget = player.pos.clone();
+
+    // Exterior Snow Particles
+    buildSnowParticles();
+
+    window.addEventListener('resize', onResize);
+    canvas.addEventListener('pointerdown', onFloorClick);
+  }
+
+  function onResize() {
+    if (!renderer || !camera) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  function onFloorClick(e) {
+    if (mode !== 'play' || paused) return;
+    const r = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const floorObj = scene.getObjectByName('floor');
+    if (!floorObj) return;
+    const hit = raycaster.intersectObject(floorObj, false)[0];
+    if (hit) {
+      setTarget(hit.point.x, hit.point.z);
+      soundPing(420, 0.04);
+      triggerHaptic('light');
+    }
+  }
+
+  function setTarget(x, z) {
+    const maxZ = save.up.expansion ? 9.0 : 6.5;
+    playerTarget.set(clamp(x, -9.8, 9.8), 0, clamp(z, -6.5, maxZ));
+  }
+
+  function blocked(p, r = 0.42) {
+    const maxZ = save.up.expansion ? 9.2 : 6.7;
+    if (p.x < -10 || p.x > 10 || p.z < -6.7 || p.z > maxZ) return true;
+    return obstacles.some(o => o.solid && Math.abs(p.x - o.x) < o.w / 2 + r && Math.abs(p.z - o.z) < o.d / 2 + r);
+  }
+
+  function moveEntity(o, dt, speed) {
+    const dx = o.target.x - o.pos.x;
+    const dz = o.target.z - o.pos.z;
+    const d = Math.hypot(dx, dz);
+    if (d < 0.12) {
+      o.isMoving = false;
+      return true;
+    }
+    o.isMoving = true;
+    o.stepCycle = (o.stepCycle || 0) + dt * 10;
+    const step = Math.min(speed * dt, d);
+    const sx = (dx / d) * step;
+    const sz = (dz / d) * step;
+
+    const candidates = [
+      new THREE.Vector3(o.pos.x + sx, 0, o.pos.z + sz),
+      new THREE.Vector3(o.pos.x + sx, 0, o.pos.z),
+      new THREE.Vector3(o.pos.x, 0, o.pos.z + sz),
+      new THREE.Vector3(o.pos.x - sz, 0, o.pos.z + sx),
+      new THREE.Vector3(o.pos.x + sz, 0, o.pos.z - sx)
+    ];
+
+    const next = candidates.find(p => !blocked(p, 0.32));
+    if (next) {
+      o.pos.x = next.x;
+      o.pos.z = next.z;
+    } else {
+      o.target.x += rnd(-0.35, 0.35);
+      o.target.z += rnd(-0.35, 0.35);
+    }
+
+    o.group.position.x = o.pos.x;
+    o.group.position.z = o.pos.z;
+    // Step bounce
+    o.group.position.y = Math.abs(Math.sin(o.stepCycle)) * 0.08;
+    o.group.rotation.y = Math.atan2(dx, dz);
+    return false;
+  }
+
+  function availableRecipes() {
+    return recipes.filter(r => r.need <= save.up.machine || r.id === 'tea');
+  }
+
+  function pickCustomerOrder() {
+    const av = availableRecipes();
+    const count = Math.random() < 0.3 && av.length > 1 ? 2 : 1;
+    const arr = [];
+    for (let i = 0; i < count; i++) {
+      arr.push(av[Math.floor(Math.random() * av.length)]);
+    }
+    return arr;
+  }
+
+  function freeTable() {
+    return tables.find(t => !t.customer && !t.dirty);
+  }
+
+  function spawnCustomer() {
+    const maxCust = Math.min(7, 3 + save.up.tables + (save.up.expansion ? 2 : 0));
+    if (customers.length >= maxCust) return;
+    const t = freeTable();
+    const colors = [0x536d89, 0x9c4d43, 0x5c805f, 0x80638f, 0xc47b3e];
+    const col = colors[customerId % colors.length];
+
+    const c = {
+      id: ++customerId,
+      group: makeCharacter(col, false),
+      pos: new THREE.Vector3(-9.4, 0, rnd(-2, 2)),
+      target: new THREE.Vector3(-8.0, 0, 0),
+      state: 'entering', // 'entering', 'seekingSeat', 'line', 'ordered', 'waiting', 'eating', 'paying', 'leaving'
+      order: pickCustomerOrder(),
+      served: [],
+      patience: 100,
+      table: t,
+      paid: false,
+      eatTimer: 8.0,
+      tip: Math.random() < 0.35,
+      stepCycle: 0
+    };
+
+    c.group.position.copy(c.pos);
+    scene.add(c.group);
+    customers.push(c);
+    if (t) t.customer = c;
+    toast('A new guest entered from the cold.');
+  }
+
+  function nearbyCustomer() {
+    return customers
+      .filter(c => dist(player.pos, c.pos) < 2.0)
+      .sort((a, b) => dist(player.pos, a.pos) - dist(player.pos, b.pos))[0];
+  }
+
+  function nearestDirtyTable() {
+    return tables
+      .filter(t => t.dirty)
+      .sort((a, b) => dist(player.pos, a) - dist(player.pos, b))[0];
+  }
+
+  function interact() {
+    if (mode !== 'play' || paused) return;
+
+    // 1. Nearby Customer interactions
+    const c = nearbyCustomer();
+    if (c) {
+      if (c.state === 'ordered') {
+        // Take order
+        c.state = 'waiting';
+        c.patience = Math.min(100, c.patience + 10);
+        if (c.table) {
+          c.target.set(c.table.x - 1.7, 0, c.table.z);
+        }
+        toast('Order noted: ' + c.order.map(o => o.name).join(' + '));
+        soundPing(680, 0.08);
+        triggerHaptic('light');
+        selectTicket(c);
+        updateUI();
+        return;
+      }
+
+      if (c.state === 'waiting' || c.state === 'eating') {
+        // Check if tray has a drink they need
+        const needIdx = c.order.findIndex((_, idx) => !c.served.includes(idx));
+        const needDrink = needIdx >= 0 ? c.order[needIdx] : null;
+        const trayIdx = held.findIndex(h => h.id === needDrink?.id);
+
+        if (c.state === 'waiting' && needDrink && trayIdx >= 0) {
+          // Serve drink!
+          held.splice(trayIdx, 1);
+          c.served.push(needIdx);
+          toast('Served ' + needDrink.name + ' (' + c.served.length + '/' + c.order.length + ')');
+          soundPing(780, 0.1);
+          triggerHaptic('heavy');
+
+          if (c.served.length === c.order.length) {
+            c.state = 'eating';
+            c.eatTimer = 8.0;
+            served++;
+          }
+          updateUI();
+          return;
+        } else if (c.state === 'eating') {
+          toast('They are warmly enjoying their drink.');
+          return;
+        } else if (needDrink && held.length > 0) {
+          toast('Wrong drink on tray! This guest wants ' + needDrink.name + '.');
+          triggerHaptic('light');
+          return;
+        } else {
+          toast('Brew ' + (needDrink ? needDrink.name : 'their order') + ' at the espresso machine.');
+          return;
+        }
+      }
+
+      if (c.state === 'paying') {
+        // Collect payment & tip
+        c.paid = true;
+        c.state = 'leaving';
+        c.target.set(-9.5, 0, rnd(-2, 2));
+        const drinkSum = c.order.reduce((acc, r) => acc + r.price, 0);
+        const tipAmt = c.tip ? 2 : 0;
+        dayEarn += drinkSum;
+        dayTips += tipAmt;
+        save.money += drinkSum + tipAmt;
+        toast('Collected $' + drinkSum + (tipAmt ? ' + $' + tipAmt + ' tip!' : '!'));
+        soundPing(920, 0.14);
+        triggerHaptic('heavy');
+        updateUI();
+        return;
+      }
+    }
+
+    // 2. Espresso Machine Station
+    if (dist(player.pos, new THREE.Vector3(2.4, 0, -4.1)) < 2.0) {
+      brewDrink();
+      return;
+    }
+
+    // 3. Clean Dirty Table / Sink
+    const dirty = nearestDirtyTable();
+    if (dist(player.pos, new THREE.Vector3(7.4, 0, -4.1)) < 2.0 || (dirty && dist(player.pos, dirty) < 2.3)) {
+      cleanTable();
+      return;
+    }
+
+    // 4. Desk
+    if (dist(player.pos, new THREE.Vector3(9.2, 0, 4.4)) < 2.0) {
+      toast('Manager Ledger: Upgrades & reports open at end of each day.');
+      return;
+    }
+
+    toast('Nothing in reach. Walk close to a guest, espresso machine, or dirty table.');
+  }
+
+  function brewDrink() {
+    if (brew) {
+      toast('The machine is brewing ' + brew.recipe.name + ' (' + (brew.recipe.time - brew.t).toFixed(1) + 's left).');
+      return;
+    }
+    if (held.length >= 3) {
+      toast('Tray is full (3/3)! Deliver drinks to guests first.');
+      triggerHaptic('light');
+      return;
+    }
+    const r = recipes.find(q => q.id === selectedRecipe);
+    if (!r || !(r.need <= save.up.machine || r.id === 'tea')) {
+      toast('That recipe is locked. Upgrade the machine in the shop.');
+      return;
+    }
+    brew = { recipe: r, t: 0 };
+    toast('Brewing ' + r.name + '… ' + r.time.toFixed(1) + 's');
+    soundPing(300, 0.12, 'triangle');
+    triggerHaptic('light');
+    updateUI();
+  }
+
+  function cleanTable() {
+    const t = nearestDirtyTable();
+    if (!t || dist(player.pos, t) > 2.4) {
+      toast('No dirty table is close.');
+      return;
+    }
+    t.dirty = false;
+    t.dirtyDishes.visible = false;
+    dirtyCleaned++;
+    toast('Table cleaned and wiped fresh for new guests!');
+    soundPing(640, 0.08);
+    triggerHaptic('light');
+    updateUI();
+  }
+
+  function selectTicket(c) {
+    focusTicket = c;
+    setTarget(c.pos.x, c.pos.z);
+    renderTickets();
+  }
+
+  function unservedOrderItems(c) {
+    return c.order
+      .map((recipe, index) => ({ recipe, index }))
+      .filter(item => !c.served.includes(item.index));
+  }
+
+  function updateCustomers(dt) {
+    for (let i = customers.length - 1; i >= 0; i--) {
+      const c = customers[i];
+
+      if (c.state === 'entering') {
+        if (dist(c.pos, c.target) < 0.25) {
+          if (c.table) {
+            c.target.set(c.table.x - 1.7, 0, c.table.z);
+            c.state = 'seekingSeat';
+          } else {
+            c.target.set(5.0, 0, -3.3);
+            c.state = 'line';
+          }
+        } else {
+          moveEntity(c, dt, 2.4);
+        }
+      } else if (c.state === 'seekingSeat') {
+        if (dist(c.pos, c.target) < 0.25) {
+          c.state = 'ordered';
+          toast('Guest seated — tap Take Order.');
+        } else {
+          moveEntity(c, dt, 2.2);
+        }
+      } else if (c.state === 'line') {
+        if (dist(c.pos, c.target) < 0.25) {
+          c.state = 'ordered';
+        } else {
+          moveEntity(c, dt, 2.2);
+        }
+      } else if (c.state === 'waiting') {
+        const decayRate = (0.45 + save.day * 0.015) * (1 - save.up.decor * 0.09);
+        c.patience -= dt * decayRate;
+        if (c.patience <= 0) {
+          loseCustomer(c);
+          continue;
+        }
+      } else if (c.state === 'eating') {
+        c.eatTimer -= dt;
+        if (c.eatTimer <= 0) {
+          c.state = 'paying';
+          toast('Guest finished — tap Collect Payment.');
+        }
+      } else if (c.state === 'paying') {
+        c.patience -= dt * 0.12;
+        if (c.patience <= -25) {
+          c.state = 'leaving';
+          c.target.set(-9.5, 0, rnd(-2, 2));
+        }
+      } else if (c.state === 'leaving') {
+        if (moveEntity(c, dt, 2.4) && c.pos.x < -8.8) {
+          if (c.table) {
+            c.table.customer = null;
+            c.table.dirty = true;
+            c.table.dirtyDishes.visible = true;
+          }
+          scene.remove(c.group);
+          customers.splice(i, 1);
+          continue;
+        }
+      }
+    }
+
+    // Line customers take newly cleaned tables
+    for (const c of customers) {
+      if (c.state === 'line' && !c.table) {
+        const t = freeTable();
+        if (t) {
+          t.customer = c;
+          c.table = t;
+          c.state = 'seekingSeat';
+          c.target.set(t.x - 1.7, 0, t.z);
+        }
+      }
+    }
+  }
+
+  function loseCustomer(c) {
+    c.state = 'leaving';
+    c.target.set(-9.5, 0, rnd(-2, 2));
+    missed++;
+    save.reputation = clamp(save.reputation - 2, 10, 100);
+    toast('A guest left disappointed. Keep brewing!');
+    if (c.table) {
+      c.table.customer = null;
+      c.table = null;
+    }
+  }
+
+  function updateStaff(dt) {
+    if (!save.up.staff) return;
+
+    staffBaristaTimer -= dt;
+    staffWaiterTimer -= dt;
+
+    if (staffBaristaTimer <= 0) {
+      staffBaristaTimer = 8.0;
+      const c = customers.find(q => q.state === 'waiting' && unservedOrderItems(q).length);
+      if (c) {
+        const item = unservedOrderItems(c)[0];
+        c.served.push(item.index);
+        toast('Barista prepared ' + item.recipe.name + ' for Guest ' + c.id);
+        if (c.served.length === c.order.length) {
+          c.state = 'eating';
+          c.eatTimer = 8.0;
+          served++;
+        }
+      }
+    }
+
+    if (staffWaiterTimer <= 0) {
+      staffWaiterTimer = 10.0;
+      const pay = customers.find(q => q.state === 'paying');
+      if (pay) {
+        pay.state = 'leaving';
+        pay.target.set(-9.5, 0, rnd(-2, 2));
+        const amt = pay.order.reduce((s, r) => s + r.price, 0);
+        dayEarn += amt;
+        dayTips += 2;
+        save.money += amt + 2;
+        toast('Waiter collected $' + amt + ' + $2 tip');
+      } else {
+        const dirty = tables.find(t => t.dirty);
+        if (dirty) {
+          dirty.dirty = false;
+          dirty.dirtyDishes.visible = false;
+          toast('Waiter wiped a table.');
+        } else {
+          const c = customers.find(q => q.state === 'waiting' && unservedOrderItems(q).length);
+          if (c) {
+            const item = unservedOrderItems(c)[0];
+            c.served.push(item.index);
+            toast('Waiter served ' + item.recipe.name);
+            if (c.served.length === c.order.length) {
+              c.state = 'eating';
+              c.eatTimer = 8.0;
+              served++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function update(dt) {
+    if (mode !== 'play' || paused) return;
+
+    elapsed += dt;
+
+    // Customer Spawning
+    if (elapsed < DAY_LENGTH - 15) {
+      spawnIn -= dt;
+      if (spawnIn <= 0) {
+        spawnIn = Math.max(3.5, 7.5 - save.day * 0.15 - save.reputation * 0.015);
+        spawnCustomer();
+      }
+    }
+
+    // Machine brewing
+    if (brew) {
+      brew.t += dt * (1 + save.up.machine * 0.15);
+      if (brew.t >= brew.recipe.time) {
+        held.push(brew.recipe);
+        toast(brew.recipe.name + ' ready! Carry it to the customer.');
+        soundPing(880, 0.14);
+        triggerHaptic('heavy');
+        brew = null;
+      }
+    }
+
+    // Player joystick & keyboard movement
+    let moveX = 0, moveZ = 0;
+    if (joystickActive) {
+      moveX = joystickVector.x;
+      moveZ = joystickVector.y;
+    }
+    if (keys.a || keys.arrowleft) moveX -= 1;
+    if (keys.d || keys.arrowright) moveX += 1;
+    if (keys.w || keys.arrowup) moveZ -= 1;
+    if (keys.s || keys.arrowdown) moveZ += 1;
+
+    if (moveX !== 0 || moveZ !== 0) {
+      const len = Math.hypot(moveX, moveZ);
+      const speed = player.speed * dt;
+      const targetPos = new THREE.Vector3(
+        player.pos.x + (moveX / len) * speed * 2.5,
+        0,
+        player.pos.z + (moveZ / len) * speed * 2.5
+      );
+      setTarget(targetPos.x, targetPos.z);
+    }
+
+    player.target = playerTarget;
+    const oldPos = player.pos.clone();
+    moveEntity(player, dt, player.speed);
+    if (blocked(player.pos, 0.42)) player.pos.copy(oldPos);
+
+    // Snow particles animation
+    if (snowParticles) {
+      const pos = snowParticles.geometry.attributes.position.array;
+      for (let i = 1; i < pos.length; i += 3) {
+        pos[i] -= dt * 1.5;
+        if (pos[i] < 0) pos[i] = 9.0;
+      }
+      snowParticles.geometry.attributes.position.needsUpdate = true;
+    }
+
+    updateCustomers(dt);
+    updateStaff(dt);
+
+    // Day End Check
+    if (elapsed >= DAY_LENGTH && customers.length === 0) finishDay();
+    else if (elapsed >= DAY_LENGTH + GRACE) finishDay();
+
+    updateUI();
+  }
+
+  function finishDay() {
+    if (mode === 'shop') return;
+    mode = 'shop';
+    paused = false;
+
+    const gross = dayEarn + dayTips;
+    const wage = save.up.staff ? Math.min(14, 4 + save.up.staff * 4) : 0;
+    const branch = save.up.branch ? 14 * save.up.branch : 0;
+
+    save.money = Math.max(0, save.money - wage) + branch;
+    save.total += gross;
+    save.reputation = clamp(save.reputation + (served >= missed ? 2 : -1), 10, 100);
+    persist();
+
+    $('summaryDay').textContent = save.day;
+    $('summary').innerHTML =
+      '<b>' + served + '</b> customers served for <b>$' + gross + '</b> in total sales' +
+      (dayTips ? ' (including $' + dayTips + ' tips)' : '') + '.<br>' +
+      '<b>' + missed + '</b> customers left unserved.<br>' +
+      (wage ? 'Staff wages paid: −$' + wage + '.<br>' : '') +
+      (branch ? 'East End passive revenue: +$' + branch + '.<br>' : '') +
+      'Current Bank: <b>$' + Math.floor(save.money) + '</b> · Reputation: <b>' + save.reputation + '/100</b>.';
+
+    renderShop();
+    $('shop').classList.remove('hidden');
+    soundPing(540, 0.2);
+  }
+
+  function newDay() {
+    // Clear floor customers
+    for (const c of customers) scene.remove(c.group);
+    customers = [];
+    tables.forEach(t => {
+      t.customer = null;
+      t.dirty = false;
+      t.dirtyDishes.visible = false;
+    });
+    held = [];
+    brew = null;
+    focusTicket = null;
+    elapsed = 0;
+    spawnIn = 1.5;
+    served = 0;
+    missed = 0;
+    dayEarn = 0;
+    dayTips = 0;
+    dirtyCleaned = 0;
+    staffBaristaTimer = 8;
+    staffWaiterTimer = 10;
+    paused = false;
+    mode = 'play';
+
+    player.pos.set(0, 0, 3.8);
+    player.group.position.copy(player.pos);
+    playerTarget.copy(player.pos);
+
+    $('shop').classList.add('hidden');
+    $('pause').classList.add('hidden');
+    toast('Day ' + save.day + ' begins — warm lights on!');
+    updateUI();
+  }
+
+  function updateUI() {
+    if (mode === 'start') return;
+
+    $('money').textContent = '$' + Math.floor(save.money);
+    $('day').textContent = save.day;
+
+    const left = Math.max(0, DAY_LENGTH - elapsed);
+    $('clock').textContent = left > 0 ? Math.floor(left / 60) + ':' + String(Math.floor(left % 60)).padStart(2, '0') : 'GRACE';
+
+    // Patience bar (average of waiting customers)
+    const activeWaiters = customers.filter(q => q.state === 'waiting' || q.state === 'ordered');
+    let avgPatience = 100;
+    if (activeWaiters.length) {
+      avgPatience = activeWaiters.reduce((s, c) => s + c.patience, 0) / activeWaiters.length;
+    }
+    $('patience').style.width = clamp(avgPatience, 0, 100) + '%';
+    $('patience').style.background = avgPatience < 30 ? '#e1684d' : '#f1c76a';
+
+    // Tray slots
+    for (let i = 0; i < 3; i++) {
+      const slotEl = $('slot' + i);
+      if (held[i]) {
+        slotEl.className = 'tray-slot filled';
+        slotEl.textContent = held[i].icon || '☕';
+      } else {
+        slotEl.className = 'tray-slot';
+        slotEl.textContent = '·';
+      }
+    }
+    $('trayCount').textContent = held.length + '/3';
+
+    // Dynamic contextual interact button & hint
+    const interactBtn = $('interactBtn');
+    const hintEl = $('hint');
+
+    const nearCust = nearbyCustomer();
+    const nearDirty = nearestDirtyTable();
+    const isNearMachine = dist(player.pos, new THREE.Vector3(2.4, 0, -4.1)) < 2.0;
+
+    if (brew) {
+      interactBtn.textContent = '⏳ BREWING';
+      hintEl.textContent = 'Brewing ' + brew.recipe.name + ' (' + (brew.recipe.time - brew.t).toFixed(1) + 's)';
+    } else if (nearCust) {
+      if (nearCust.state === 'ordered') {
+        interactBtn.textContent = '📋 TAKE ORDER';
+        hintEl.textContent = 'Tap to take Guest ' + nearCust.id + ' order';
+      } else if (nearCust.state === 'waiting') {
+        const unserved = unservedOrderItems(nearCust);
+        if (unserved.length && held.some(h => h.id === unserved[0].recipe.id)) {
+          interactBtn.textContent = '✨ SERVE';
+          hintEl.textContent = 'Serve ' + unserved[0].recipe.name + ' to Guest ' + nearCust.id;
+        } else {
+          interactBtn.textContent = '☕ DELIVER';
+          hintEl.textContent = 'Needs: ' + unserved.map(u => u.recipe.name).join(' + ');
+        }
+      } else if (nearCust.state === 'paying') {
+        interactBtn.textContent = '💵 COLLECT';
+        hintEl.textContent = 'Collect bill from Guest ' + nearCust.id;
+      } else {
+        interactBtn.textContent = '☕ INTERACT';
+        hintEl.textContent = 'Guest enjoying coffee';
+      }
+    } else if (isNearMachine) {
+      const rec = recipes.find(r => r.id === selectedRecipe) || recipes[0];
+      interactBtn.textContent = '☕ BREW ' + rec.name.split(' ')[0].toUpperCase();
+      hintEl.textContent = 'Tap to brew ' + rec.name + ' ($' + rec.price + ')';
+    } else if (nearDirty && dist(player.pos, nearDirty) < 2.3) {
+      interactBtn.textContent = '🧽 WIPE TABLE';
+      hintEl.textContent = 'Clean table for incoming guests';
+    } else {
+      interactBtn.textContent = '☕ INTERACT';
+      hintEl.textContent = held.length ? 'Carry ' + held.length + ' cup(s) to waiting guests' : 'Use joystick or tap floor to walk';
+    }
+
+    renderTickets();
+  }
+
+  function renderTickets() {
+    const el = $('tickets');
+    const active = customers.filter(c => ['ordered', 'waiting', 'eating', 'paying'].includes(c.state));
+    $('ticketCount').textContent = active.length + ' open';
+
+    if (!active.length) {
+      el.className = 'ticketEmpty';
+      el.textContent = 'The morning is quiet. Guests and their drink orders will appear here.';
+      return;
+    }
+
+    el.className = '';
+    el.innerHTML = active.map(c => {
+      const done = c.served.length;
+      const cnt = c.order.length;
+      let stateTxt = done + '/' + cnt + ' SERVED';
+      if (c.state === 'paying') stateTxt = 'PAYMENT READY';
+      else if (c.state === 'eating') stateTxt = 'ENJOYING';
+      else if (c.state === 'ordered') stateTxt = 'TAKE ORDER';
+
+      return '<div class="ticketRow ' + (focusTicket === c ? 'selected' : '') + '" data-id="' + c.id + '">' +
+        '<div class="ticketName"><span>Guest ' + c.id + (c.table ? ' · Table' : ' · Bar') + '</span><span class="ticketStatus">' + stateTxt + '</span></div>' +
+        '<div class="ticketSub">' + c.order.map((r, i) => (c.served.includes(i) ? '✓ ' : '○ ') + r.name).join('<br>') + '</div>' +
+        '<div class="miniBar"><i style="width:' + clamp(c.patience, 0, 100) + '%;background:' + (c.patience < 30 ? '#e1684d' : '#f1c76a') + '"></i></div>' +
+        '</div>';
+    }).join('');
+
+    el.querySelectorAll('.ticketRow').forEach(row => {
+      row.onclick = () => {
+        const c = customers.find(q => q.id == row.dataset.id);
+        if (c) {
+          focusTicket = c;
+          setTarget(c.pos.x, c.pos.z);
+          renderTickets();
+          toast('Walking to Guest ' + c.id);
+          triggerHaptic('light');
+        }
+      };
+    });
+  }
+
+  function renderRecipes() {
+    const el = $('recipeList');
+    el.innerHTML = recipes.map(r => {
+      const unlocked = r.need <= save.up.machine || r.id === 'tea';
+      return '<button class="recipe ' + (unlocked ? '' : 'locked') + ' ' + (selectedRecipe === r.id ? 'selected' : '') + '" data-r="' + r.id + '" ' + (unlocked ? '' : 'disabled') + '>' +
+        '<b>' + r.icon + ' ' + r.name + (unlocked ? '' : ' (LOCKED)') + '</b>' +
+        '<small>$' + r.price + ' · ' + r.time.toFixed(1) + 's brew</small>' +
+        '<em>' + r.desc + '</em>' +
+        '</button>';
+    }).join('');
+
+    el.querySelectorAll('[data-r]').forEach(b => {
+      b.onclick = () => {
+        selectedRecipe = b.dataset.r;
+        $('recipes').classList.add('hidden');
+        toast('Selected ' + recipes.find(r => r.id === selectedRecipe).name);
+        triggerHaptic('light');
+        updateUI();
+      };
+    });
+  }
+
+  function renderShop() {
+    const defs = [
+      ['machine', 'High-Extraction Espresso Machine', 'Tier ' + save.up.machine + '/3 · Unlocks Velvet Latte, Mocha and faster brew times', 70 + save.up.machine * 80, save.up.machine < 3],
+      ['tables', 'Additional Café Seating', 'Tier ' + save.up.tables + '/3 · Adds 3D tables and chairs to seat more guests', 85 + save.up.tables * 80, save.up.tables < 3],
+      ['decor', 'Cozy Lamps & Botanicals', 'Tier ' + save.up.decor + '/3 · Potted plants and amber lamps increase guest patience', 80 + save.up.decor * 70, save.up.decor < 3],
+      ['expansion', 'Back Annex Room Expansion', 'Opens physical back room with extended 3D floor and additional seating', 175, save.up.expansion < 1],
+      ['staff', 'Hire Café Barista & Waiter', 'Tier ' + save.up.staff + '/2 · Automated Barista brews & Waiter delivers and cleans', 190 + save.up.staff * 90, save.up.staff < 2],
+      ['branch', 'East End Kiosk Franchise', 'Tier ' + save.up.branch + '/2 · Generates passive +$14 revenue every day', 240 + save.up.branch * 110, save.up.branch < 2]
+    ];
+
+    const icons = { machine: '⚙', tables: '🪑', decor: '🌿', expansion: '🚪', staff: '🧑‍🍳', branch: '🏢' };
+
+    $('shopRows').innerHTML = defs.map(d => {
+      const affordable = save.money >= d[3];
+      const canBuy = d[4];
+      return '<div class="shoprow">' +
+        '<div><b>' + (icons[d[0]] || '✨') + ' ' + d[1] + '</b><small>' + d[2] + '</small></div>' +
+        '<button class="btn ' + (affordable && canBuy ? 'primary' : '') + '" data-up="' + d[0] + '" ' + (!affordable || !canBuy ? 'disabled' : '') + '>' +
+        (canBuy ? '$' + d[3] : 'MAX') +
+        '</button>' +
+        '</div>';
+    }).join('');
+
+    $('shopRows').querySelectorAll('[data-up]').forEach(b => {
+      b.onclick = () => {
+        const key = b.dataset.up;
+        const targetDef = defs.find(d => d[0] === key);
+        if (targetDef && save.money >= targetDef[3] && targetDef[4]) {
+          save.money -= targetDef[3];
+          save.up[key]++;
+          persist();
+          toast('Upgrade purchased! Applied to the café floor.');
+          triggerHaptic('heavy');
+          soundPing(720, 0.12);
+          renderShop();
+        }
+      };
+    });
+  }
+
+  function toast(msg) {
+    const el = $('bubble');
+    el.textContent = msg;
+    el.classList.add('show');
+    toastTimer = 3.2;
+  }
+
+  // Virtual Joystick implementation
+  let joystickActive = false;
+  let joystickVector = { x: 0, y: 0 };
+  const joystickBase = $('joystickBase');
+  const joystickThumb = $('joystickThumb');
+
+  function handleJoystick(touchX, touchY) {
+    const rect = joystickBase.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const maxRadius = rect.width / 2;
+
+    const dx = touchX - centerX;
+    const dy = touchY - centerY;
+    const dist = Math.hypot(dx, dy);
+    const clampedDist = Math.min(dist, maxRadius);
+    const angle = Math.atan2(dy, dx);
+
+    const thumbX = Math.cos(angle) * clampedDist;
+    const thumbY = Math.sin(angle) * clampedDist;
+
+    joystickThumb.style.transform = 'translate(' + thumbX + 'px, ' + thumbY + 'px)';
+    joystickVector.x = (thumbX / maxRadius);
+    joystickVector.y = (thumbY / maxRadius);
+  }
+
+  function resetJoystick() {
+    joystickActive = false;
+    joystickVector = { x: 0, y: 0 };
+    joystickThumb.style.transform = 'translate(0px, 0px)';
+  }
+
+  joystickBase.addEventListener('pointerdown', e => {
+    joystickActive = true;
+    handleJoystick(e.clientX, e.clientY);
+  });
+
+  window.addEventListener('pointermove', e => {
+    if (joystickActive) {
+      handleJoystick(e.clientX, e.clientY);
+    }
+  });
+
+  window.addEventListener('pointerup', resetJoystick);
+  window.addEventListener('pointercancel', resetJoystick);
+
+  // Keyboard controls
+  const keys = {};
+  window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    if (k === 'e' || k === 'enter' || k === ' ') interact();
+    if (k === 'escape') togglePause();
+  });
+  window.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  // UI Event bindings
+  $('startBtn').onclick = () => {
+    if (!renderer) buildWorld();
+    mode = 'play';
+    $('start').classList.add('hidden');
+    newDay();
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+  };
+
+  $('interactBtn').onclick = interact;
+
+  function togglePause() {
+    if (mode !== 'play') return;
+    paused = !paused;
+    $('pause').classList.toggle('hidden', !paused);
+    $('pauseBtn').textContent = paused ? '▶ RESUME' : 'Ⅱ PAUSE';
+  }
+
+  $('pauseBtn').onclick = togglePause;
+  $('resumeBtn').onclick = togglePause;
+  $('pauseHelpBtn').onclick = () => {
+    $('pause').classList.add('hidden');
+    $('help').classList.remove('hidden');
+  };
+
+  $('helpBtn').onclick = () => {
+    if (mode === 'play') paused = true;
+    $('help').classList.remove('hidden');
+  };
+  $('closeHelp').onclick = () => {
+    $('help').classList.add('hidden');
+    if (mode === 'play') paused = false;
+  };
+
+  $('drinkBtn').onclick = () => {
+    if (mode === 'play') {
+      renderRecipes();
+      $('recipes').classList.remove('hidden');
+    }
+  };
+  $('closeRecipes').onclick = () => {
+    $('recipes').classList.add('hidden');
+  };
+
+  $('audioBtn').onclick = () => {
+    save.audio = !save.audio;
+    $('audioBtn').textContent = save.audio ? '♪ SOUND' : '🔇 MUTED';
+    toast(save.audio ? 'Audio enabled' : 'Audio muted');
+    persist();
+  };
+
+  $('nextBtn').onclick = () => {
+    save.day++;
+    persist();
+    // Rebuild room in case layout expanded or new tables were added
+    if (scene) {
+      while (scene.children.length > 0) scene.remove(scene.children[0]);
+      obstacles = [];
+      tables = [];
+      buildWorld();
+    }
+    newDay();
+  };
+
+  $('resetBtn').onclick = () => {
+    if (confirm('Start a brand new café journey from Day 1?')) {
+      save = defaultSave();
+      persist();
+      location.reload();
+    }
+  };
+
+  // Main Render Loop
+  function gameLoop(now) {
+    const dt = Math.min(0.05, (now - lastTime) / 1000 || 0);
+    lastTime = now;
+
+    if (toastTimer > 0) {
+      toastTimer -= dt;
+      if (toastTimer <= 0) $('bubble').classList.remove('show');
+    }
+
+    update(dt);
+
+    if (renderer && scene && camera && player) {
+      // Smooth camera follow target
+      const lookTarget = new THREE.Vector3(player.pos.x * 0.45, 0, player.pos.z * 0.25 + 1.8);
+      const camTarget = new THREE.Vector3(player.pos.x * 0.55, 14.2, player.pos.z * 0.48 + 15.2);
+      camera.position.lerp(camTarget, 0.08);
+      camera.lookAt(lookTarget);
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Pre-initialize scene
+  buildWorld();
+  updateUI();
+
+})();
+</script>
+</body>
+</html>

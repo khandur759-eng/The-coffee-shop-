@@ -1,0 +1,7 @@
+{
+  "name": "The Last Coffee Shop",
+  "description": "A cozy 3D café simulator where you brew coffee, take orders, and run the city's last warm haven.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
